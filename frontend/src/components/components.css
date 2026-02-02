@@ -1,0 +1,15 @@
+.TextArea {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;        
+    width: 350px;
+}
+
+.nameRow {
+    display: flex;
+    gap: 16px;        
+}
+
+.nameRow .MuiTextField-root {
+    flex: 1;          
+}

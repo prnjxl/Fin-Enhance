@@ -1,0 +1,70 @@
+/*Navbar*/
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    padding: 8px 40px;
+    box-sizing: border-box;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 36px;
+    display: block;
+}
+
+.nav-center {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-center li,
+.nav-right li {
+    position: relative;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.nav-center li::after,
+.nav-right li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 0;
+    height: 2px;
+    background: black;
+    transition: width 0.3s ease;
+}
+
+.nav-center li:hover::after,
+.nav-right li:hover::after {
+    width: 100%;
+}
+
+/* Footer*/
+.footer {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
