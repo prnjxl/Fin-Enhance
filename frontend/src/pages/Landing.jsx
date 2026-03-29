@@ -1,11 +1,13 @@
-// Cards, Title, Bg Image/Video
-export default function Landing(){
-    return (
-        <>
-            <h1>The Future of Credit Scoring is here <br />
-            Be the Pioneer at Finance
-            </h1>
-            <p></p>
-        </>
-    );
+import "./pages.css";
+export default function Landing() {
+  return (
+    <section className="landing-hero">
+      <div className="landing-content">
+        <h1>
+          Built to power the world of <i>Finance</i>
+        </h1>
+        <p></p>
+      </div>
+    </section>
+  );
 }

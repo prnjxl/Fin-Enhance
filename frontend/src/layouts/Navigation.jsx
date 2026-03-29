@@ -46,7 +46,7 @@ export default function Navigation() {
             </li>
             <li>
               <Link to="/signup" style={{ textDecoration: 'none', color: 'inherit' }}>
-                Sign up
+                Register
               </Link>
             </li>
           </>

@@ -21,16 +21,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Auth API
+// Auth APIs
 export const registerUser = (data) => api.post('/auth/register', data);
 export const loginUser = (data) => api.post('/auth/login', data);
 export const getMe = () => api.get('/auth/me');
 
-// Form Data API
+// Form Data APIs
 export const submitFormData = (data) => api.post('/forms', data);
 export const getFormData = () => api.get('/forms');
 
-// OAuth URLs (redirect, not API calls)
+// Credit Score APIs
+export const predictCreditScore = () => api.post('/forms/predict');
+export const getCreditScore = () => api.get('/forms/score');
+
+// OAuth redirects
 export const GOOGLE_AUTH_URL = `${API_BASE_URL}/auth/google`;
 export const GITHUB_AUTH_URL = `${API_BASE_URL}/auth/github`;
 

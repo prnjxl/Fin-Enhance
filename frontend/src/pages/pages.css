@@ -1,4 +1,36 @@
-.text {
-    text-align: center;
-    margin: 10px;
+.landing-hero {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+
+  background-image:
+    url("https://mir-s3-cdn-cf.behance.net/project_modules/fs/666688187673799.658d9956b09d4.jpg");
+  background-size: 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.landing-content {
+  max-width: 700px;
+  color: #000000;
+}
+
+i{
+    color: #16a34a;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.landing-content h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.landing-content p {
+  color: rgba(0, 0, 0, 0.9);
+  line-height: 1.6;
+  margin: 0;
 }

@@ -1,104 +1,22 @@
 import './hooks.css';
 import React, { useState, useEffect } from 'react';
-import CurrencyInput from 'react-currency-input-field';
-import { submitFormData, getFormData } from '../services/api';
+import { submitFormData, getFormData, predictCreditScore } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const BRAND_GREEN = "#22c55e";
-const BRAND_GREEN_DARK = "#16a34a";
-
-const styles = {
-  formGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: "16px",
-    marginBottom: "24px",
-  },
-  fieldGroup: {
-    marginBottom: "16px",
-  },
-  label: {
-    display: "block",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#444",
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-    marginBottom: "6px",
-  },
-  input: {
-    width: "100%",
-    padding: "11px 14px",
-    border: "1.5px solid #e0e0e0",
-    borderRadius: "8px",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    color: "#111",
-    background: "#fafafa",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.15s",
-  },
-  sectionTitle: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#333",
-    margin: "28px 0 16px 0",
-    paddingBottom: "8px",
-    borderBottom: "1px solid #f0f0f0",
-  },
-  spendingGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "14px",
-    marginBottom: "24px",
-  },
-  submitBtn: {
-    padding: "13px 32px",
-    background: BRAND_GREEN,
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "15px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background 0.15s",
-  },
-  submitBtnDisabled: {
-    padding: "13px 32px",
-    background: "#a0d8b0",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "15px",
-    fontWeight: "600",
-    cursor: "not-allowed",
-  },
-  successMsg: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "13px",
-    color: BRAND_GREEN_DARK,
-    fontWeight: "500",
-    marginTop: "12px",
-  },
-  errorMsg: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "13px",
-    color: "#e53e3e",
-    fontWeight: "500",
-    marginTop: "12px",
-  },
-};
-
-const Form = () => {
+const Form = ({ onScoreUpdate }) => {
   const { isAuthenticated } = useAuth();
   const [annualIncome, setAnnualIncome] = useState('');
   const [dob, setDob] = useState('');
   const [occupation, setOccupation] = useState('');
+
+  // Credit score API fields
+  const [monthlyIncome, setMonthlyIncome] = useState('');
+  const [loanRepayment, setLoanRepayment] = useState('');
+  const [rent, setRent] = useState('');
+  const [utilities, setUtilities] = useState('');
+  const [insurance, setInsurance] = useState('');
+  const [desiredSavings, setDesiredSavings] = useState('');
+
   const [spendings, setSpendings] = useState({
     groceries: '',
     transport: '',
@@ -108,12 +26,15 @@ const Form = () => {
     education: '',
     miscellaneous: '',
   });
+
   const [saving, setSaving] = useState(false);
+  const [predicting, setPredicting] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [activeSection, setActiveSection] = useState('profile');
 
-  const handleValueChange = (name) => (value) => {
-    setSpendings((prev) => ({ ...prev, [name]: value || '' }));
+  const handleSpendingChange = (name, value) => {
+    setSpendings((prev) => ({ ...prev, [name]: value }));
   };
 
   // Load existing data on mount
@@ -126,6 +47,12 @@ const Form = () => {
           setAnnualIncome(d.annualIncome || '');
           setDob(d.dob ? d.dob.split('T')[0] : '');
           setOccupation(d.occupation || '');
+          setMonthlyIncome(d.monthlyIncome?.toString() || '');
+          setLoanRepayment(d.loanRepayment?.toString() || '');
+          setRent(d.rent?.toString() || '');
+          setUtilities(d.utilities?.toString() || '');
+          setInsurance(d.insurance?.toString() || '');
+          setDesiredSavings(d.desiredSavings?.toString() || '');
           if (d.spendings) {
             setSpendings({
               groceries: d.spendings.groceries?.toString() || '',
@@ -137,14 +64,16 @@ const Form = () => {
               miscellaneous: d.spendings.miscellaneous?.toString() || '',
             });
           }
+          // If there's a saved credit score, push it to parent
+          if (d.creditScoreResult?.credit_score && onScoreUpdate) {
+            onScoreUpdate(d.creditScoreResult);
+          }
         }
       })
-      .catch(() => {
-        // No saved data yet — that's fine
-      });
+      .catch(() => {});
   }, [isAuthenticated]);
 
-  const handleSubmit = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setSaveMsg('');
@@ -155,95 +84,330 @@ const Form = () => {
         dob: dob || null,
         occupation,
         spendings,
+        monthlyIncome,
+        loanRepayment,
+        rent,
+        utilities,
+        insurance,
+        desiredSavings,
       });
-      setSaveMsg('✓ Financial data saved successfully!');
+      setSaveMsg('Financial data saved successfully!');
+      setTimeout(() => setSaveMsg(''), 4000);
     } catch (err) {
-      setSaveError(err.response?.data?.message || 'Failed to save data. Please try again.');
+      setSaveError(err.response?.data?.message || 'Failed to save data.');
     } finally {
       setSaving(false);
     }
   };
 
-  const categories = [
-    { key: 'groceries', label: 'Groceries' },
-    { key: 'transport', label: 'Transport' },
-    { key: 'entertainment', label: 'Entertainment' },
-    { key: 'eatOut', label: 'Eat-Out' },
-    { key: 'healthcare', label: 'Healthcare' },
-    { key: 'education', label: 'Education' },
-    { key: 'miscellaneous', label: 'Miscellaneous' },
+  const handlePredict = async () => {
+    setPredicting(true);
+    setSaveMsg('');
+    setSaveError('');
+    try {
+      // First save, then predict
+      await submitFormData({
+        annualIncome,
+        dob: dob || null,
+        occupation,
+        spendings,
+        monthlyIncome,
+        loanRepayment,
+        rent,
+        utilities,
+        insurance,
+        desiredSavings,
+      });
+      const res = await predictCreditScore();
+      if (onScoreUpdate) {
+        onScoreUpdate(res.data.data);
+      }
+      setSaveMsg('Credit score calculated! Check your results below.');
+      setTimeout(() => setSaveMsg(''), 5000);
+    } catch (err) {
+      setSaveError(err.response?.data?.message || 'Failed to predict credit score.');
+    } finally {
+      setPredicting(false);
+    }
+  };
+
+  const spendingCategories = [
+    { key: 'groceries', label: 'Groceries', icon: '🛒' },
+    { key: 'transport', label: 'Transport', icon: '🚗' },
+    { key: 'entertainment', label: 'Entertainment', icon: '🎬' },
+    { key: 'eatOut', label: 'Eating Out', icon: '🍽️' },
+    { key: 'healthcare', label: 'Healthcare', icon: '🏥' },
+    { key: 'education', label: 'Education', icon: '📚' },
+    { key: 'miscellaneous', label: 'Miscellaneous', icon: '📦' },
+  ];
+
+  const sections = [
+    { id: 'profile', label: 'Profile', icon: '👤' },
+    { id: 'income', label: 'Income & Loans', icon: '💰' },
+    { id: 'expenses', label: 'Expenses', icon: '💳' },
+    { id: 'goals', label: 'Goals', icon: '🎯' },
   ];
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div style={styles.formGrid}>
-        <div style={styles.fieldGroup}>
-          <label style={styles.label}>Annual Income</label>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="e.g. ₹8,00,000"
-            value={annualIncome}
-            onChange={(e) => setAnnualIncome(e.target.value)}
-          />
-        </div>
-        <div style={styles.fieldGroup}>
-          <label style={styles.label}>Date of Birth</label>
-          <input
-            style={styles.input}
-            type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-          />
-        </div>
-        <div style={styles.fieldGroup}>
-          <label style={styles.label}>Occupation</label>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="e.g. Software Engineer"
-            value={occupation}
-            onChange={(e) => setOccupation(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div style={styles.sectionTitle}>Monthly Spendings</div>
-      <div style={styles.spendingGrid}>
-        {categories.map((cat) => (
-          <div key={cat.key} style={styles.fieldGroup}>
-            <label htmlFor={cat.key} style={styles.label}>
-              {cat.label}
-            </label>
-            <CurrencyInput
-              id={cat.key}
-              name={cat.key}
-              value={spendings[cat.key]}
-              onValueChange={handleValueChange(cat.key)}
-              prefix="₹ "
-              placeholder="0.00"
-              decimalsLimit={2}
-              min={0}
-              intlConfig={{ locale: 'en-IN' }}
-              style={styles.input}
-            />
-          </div>
+    <div className="form-wrapper">
+      {/* Section Tabs */}
+      <div className="form-tabs">
+        {sections.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            className={`form-tab ${activeSection === s.id ? 'form-tab--active' : ''}`}
+            onClick={() => setActiveSection(s.id)}
+          >
+            <span className="form-tab__icon">{s.icon}</span>
+            <span className="form-tab__label">{s.label}</span>
+          </button>
         ))}
       </div>
 
-      <button
-        type="submit"
-        style={saving ? styles.submitBtnDisabled : styles.submitBtn}
-        disabled={saving}
-        onMouseEnter={e => { if (!saving) e.target.style.background = BRAND_GREEN_DARK; }}
-        onMouseLeave={e => { if (!saving) e.target.style.background = BRAND_GREEN; }}
-      >
-        {saving ? 'Saving...' : 'Save Financial Data'}
-      </button>
+      <form onSubmit={handleSave}>
+        {/* Profile Section */}
+        {activeSection === 'profile' && (
+          <div className="form-section fade-in">
+            <div className="form-section__header">
+              <h3 className="form-section__title">Personal Information</h3>
+              <p className="form-section__desc">Basic details about you</p>
+            </div>
+            <div className="form-grid form-grid--3">
+              <div className="form-field">
+                <label className="form-label">Annual Income</label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="text"
+                    placeholder="e.g. 8,00,000"
+                    value={annualIncome}
+                    onChange={(e) => setAnnualIncome(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="form-field">
+                <label className="form-label">Date of Birth</label>
+                <input
+                  className="form-input"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label">Occupation</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="e.g. Software Engineer"
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-      {saveMsg && <div style={styles.successMsg}>{saveMsg}</div>}
-      {saveError && <div style={styles.errorMsg}>{saveError}</div>}
-    </form>
+        {/* Income & Loans Section */}
+        {activeSection === 'income' && (
+          <div className="form-section fade-in">
+            <div className="form-section__header">
+              <h3 className="form-section__title">Income & Financial Obligations</h3>
+              <p className="form-section__desc">Monthly income and recurring commitments</p>
+            </div>
+            <div className="form-grid form-grid--3">
+              <div className="form-field">
+                <label className="form-label">
+                  Monthly Income <span className="form-label--required">*</span>
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="number"
+                    placeholder="50000"
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(e.target.value)}
+                    required
+                    min="1"
+                  />
+                </div>
+                <span className="form-hint">Required for credit score</span>
+              </div>
+              <div className="form-field">
+                <label className="form-label">
+                  Loan Repayment <span className="form-label--required">*</span>
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="number"
+                    placeholder="8000"
+                    value={loanRepayment}
+                    onChange={(e) => setLoanRepayment(e.target.value)}
+                    min="0"
+                  />
+                </div>
+                <span className="form-hint">EMI / monthly loan payments</span>
+              </div>
+              <div className="form-field">
+                <label className="form-label">
+                  Rent <span className="form-label--required">*</span>
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="number"
+                    placeholder="12000"
+                    value={rent}
+                    onChange={(e) => setRent(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Expenses Section */}
+        {activeSection === 'expenses' && (
+          <div className="form-section fade-in">
+            <div className="form-section__header">
+              <h3 className="form-section__title">Monthly Expenses</h3>
+              <p className="form-section__desc">Your regular monthly spending categories</p>
+            </div>
+            <div className="form-grid form-grid--2">
+              {spendingCategories.map((cat) => (
+                <div key={cat.key} className="form-field">
+                  <label className="form-label">
+                    <span className="form-label__icon">{cat.icon}</span>
+                    {cat.label}
+                  </label>
+                  <div className="form-input-wrap">
+                    <span className="form-input-icon">₹</span>
+                    <input
+                      className="form-input form-input--icon"
+                      type="number"
+                      placeholder="0"
+                      value={spendings[cat.key]}
+                      onChange={(e) => handleSpendingChange(cat.key, e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              ))}
+              <div className="form-field">
+                <label className="form-label">
+                  <span className="form-label__icon">⚡</span>
+                  Utilities
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="number"
+                    placeholder="3000"
+                    value={utilities}
+                    onChange={(e) => setUtilities(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div className="form-field">
+                <label className="form-label">
+                  <span className="form-label__icon">🛡️</span>
+                  Insurance
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon"
+                    type="number"
+                    placeholder="2200"
+                    value={insurance}
+                    onChange={(e) => setInsurance(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Goals Section */}
+        {activeSection === 'goals' && (
+          <div className="form-section fade-in">
+            <div className="form-section__header">
+              <h3 className="form-section__title">Savings Goal</h3>
+              <p className="form-section__desc">How much do you want to save monthly?</p>
+            </div>
+            <div className="form-grid form-grid--1">
+              <div className="form-field form-field--wide">
+                <label className="form-label">
+                  <span className="form-label__icon">🎯</span>
+                  Desired Monthly Savings
+                </label>
+                <div className="form-input-wrap">
+                  <span className="form-input-icon">₹</span>
+                  <input
+                    className="form-input form-input--icon form-input--large"
+                    type="number"
+                    placeholder="7000"
+                    value={desiredSavings}
+                    onChange={(e) => setDesiredSavings(e.target.value)}
+                    min="0"
+                  />
+                </div>
+                <span className="form-hint">This is factored into your credit assessment</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Messages */}
+        {saveMsg && (
+          <div className="form-msg form-msg--success fade-in">
+            <span className="form-msg__icon">✓</span> {saveMsg}
+          </div>
+        )}
+        {saveError && (
+          <div className="form-msg form-msg--error fade-in">
+            <span className="form-msg__icon">✕</span> {saveError}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="form-actions">
+          <button
+            type="submit"
+            className="form-btn form-btn--secondary"
+            disabled={saving || predicting}
+          >
+            {saving ? (
+              <><span className="form-btn__spinner"></span> Saving...</>
+            ) : (
+              <><span className="form-btn__icon">💾</span> Save Data</>
+            )}
+          </button>
+          <button
+            type="button"
+            className="form-btn form-btn--primary"
+            disabled={saving || predicting || !monthlyIncome}
+            onClick={handlePredict}
+          >
+            {predicting ? (
+              <><span className="form-btn__spinner"></span> Analyzing...</>
+            ) : (
+              <><span className="form-btn__icon">⚡</span> Calculate Credit Score</>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

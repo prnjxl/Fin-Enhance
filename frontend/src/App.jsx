@@ -20,11 +20,6 @@ function App() {
           element={
             <>
               <Landing />
-              <span>
-                <Card />
-                <Card />
-                <Card />
-              </span>
             </>
           }
         />

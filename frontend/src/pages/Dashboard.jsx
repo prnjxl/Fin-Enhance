@@ -1,141 +1,16 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getCreditScore } from '../services/api';
 import Form from '../hooks/Form.jsx';
-
-const BRAND_GREEN = "#22c55e";
-const BRAND_GREEN_DARK = "#16a34a";
-
-const styles = {
-  page: {
-    minHeight: "calc(100vh - 64px)",
-    background: "#f0f0eb",
-    padding: "40px 20px",
-  },
-  container: {
-    maxWidth: "900px",
-    margin: "0 auto",
-  },
-  header: {
-    background: "#ffffff",
-    borderRadius: "16px",
-    boxShadow: "0 2px 24px rgba(0,0,0,0.08)",
-    padding: "32px 40px",
-    marginBottom: "24px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  welcomeTitle: {
-    fontFamily: "'Georgia', serif",
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#111",
-    margin: "0 0 4px 0",
-  },
-  welcomeSub: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    color: "#777",
-    margin: 0,
-  },
-  userBadge: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
-  avatar: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
-    background: BRAND_GREEN,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "16px",
-    fontWeight: "600",
-  },
-  avatarImg: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
-    objectFit: "cover",
-  },
-  userName: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#333",
-  },
-  userEmail: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "12px",
-    color: "#999",
-  },
-  logoutBtn: {
-    padding: "8px 20px",
-    background: "#fff",
-    border: "1.5px solid #e0e0e0",
-    borderRadius: "8px",
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "13px",
-    fontWeight: "500",
-    color: "#555",
-    cursor: "pointer",
-    transition: "background 0.12s, border-color 0.12s",
-  },
-  formCard: {
-    background: "#ffffff",
-    borderRadius: "16px",
-    boxShadow: "0 2px 24px rgba(0,0,0,0.08)",
-    padding: "36px 40px",
-  },
-  formTitle: {
-    fontFamily: "'Georgia', serif",
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#111",
-    margin: "0 0 6px 0",
-  },
-  formSub: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    color: "#777",
-    margin: "0 0 28px 0",
-  },
-  infoGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: "16px",
-    marginBottom: "24px",
-  },
-  infoCard: {
-    background: "#f9fafb",
-    borderRadius: "10px",
-    padding: "16px",
-    border: "1px solid #f0f0f0",
-  },
-  infoLabel: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "11px",
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    color: "#888",
-    marginBottom: "4px",
-  },
-  infoValue: {
-    fontFamily: "'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#222",
-  },
-};
+import CreditResults from '../components/CreditResults.jsx';
+import './Dashboard.css';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [scoreData, setScoreData] = useState(null);
+  const [activeView, setActiveView] = useState('form');
 
   const handleLogout = () => {
     logout();
@@ -152,65 +27,174 @@ export default function Dashboard() {
       .slice(0, 2);
   };
 
+  // Load saved credit score on mount
+  useEffect(() => {
+    getCreditScore()
+      .then((res) => {
+        setScoreData(res.data);
+      })
+      .catch(() => { });
+  }, []);
+
+  const handleScoreUpdate = (data) => {
+    setScoreData(data);
+    setActiveView('results');
+  };
+
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
+    <div className="dash-page">
+      <div className="dash-container">
         {/* Header */}
-        <div style={styles.header}>
-          <div>
-            <h1 style={styles.welcomeTitle}>Welcome, {user?.name || "User"} 👋</h1>
-            <p style={styles.welcomeSub}>Manage your financial profile and insights</p>
+        <div className="dash-header">
+          <div className="dash-header__left">
+            <h1 className="dash-header__title">
+              Welcome back, {user?.name?.split(' ')[0] || "User"} 👋
+            </h1>
+            <p className="dash-header__subtitle">
+              Manage your financial profile and track your credit health
+            </p>
           </div>
-          <div style={styles.userBadge}>
+          <div className="dash-header__right">
             {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" style={styles.avatarImg} />
+              <img src={user.avatar} alt="Avatar" className="dash-avatar-img" />
             ) : (
-              <div style={styles.avatar}>{getInitials(user?.name)}</div>
+              <div className="dash-avatar">{getInitials(user?.name)}</div>
             )}
-            <div>
-              <div style={styles.userName}>{user?.name}</div>
-              <div style={styles.userEmail}>{user?.email || user?.provider}</div>
+            <div className="dash-user-info">
+              <div className="dash-user-name">{user?.name}</div>
+              <div className="dash-user-email">{user?.email || user?.provider}</div>
             </div>
-            <button
-              style={styles.logoutBtn}
-              onClick={handleLogout}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f7f7f7"; e.currentTarget.style.borderColor = "#ccc"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e0e0e0"; }}
-            >
+            <button className="dash-logout-btn" onClick={handleLogout}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Log out
             </button>
           </div>
         </div>
 
-        {/* Account Info */}
-        <div style={{ ...styles.formCard, marginBottom: "24px" }}>
-          <h2 style={styles.formTitle}>Account Details</h2>
-          <p style={styles.formSub}>Your profile information</p>
-          <div style={styles.infoGrid}>
-            <div style={styles.infoCard}>
-              <div style={styles.infoLabel}>Name</div>
-              <div style={styles.infoValue}>{user?.name || "—"}</div>
+        {/* Quick Stats - show if we have a score */}
+        {scoreData && (
+          <div className="dash-quick-stats fade-in">
+            <div className="dash-stat-card dash-stat-card--score">
+              <div className="dash-stat-card__icon">📈</div>
+              <div className="dash-stat-card__content">
+                <div className="dash-stat-card__label">Credit Score</div>
+                <div className="dash-stat-card__value" style={{
+                  color: scoreData.credit_score >= 70 ? '#22c55e' :
+                    scoreData.credit_score >= 40 ? '#f59e0b' : '#ef4444'
+                }}>
+                  {scoreData.credit_score?.toFixed(1)}
+                </div>
+              </div>
             </div>
-            <div style={styles.infoCard}>
-              <div style={styles.infoLabel}>Email</div>
-              <div style={styles.infoValue}>{user?.email || "—"}</div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-card__icon">🛡️</div>
+              <div className="dash-stat-card__content">
+                <div className="dash-stat-card__label">Risk Level</div>
+                <div className="dash-stat-card__value dash-stat-card__value--sm">
+                  {scoreData.risk_level}
+                </div>
+              </div>
             </div>
-            <div style={styles.infoCard}>
-              <div style={styles.infoLabel}>Auth Provider</div>
-              <div style={styles.infoValue}>
-                {user?.provider
-                  ? user.provider.charAt(0).toUpperCase() + user.provider.slice(1)
-                  : "—"}
+            <div className="dash-stat-card">
+              <div className="dash-stat-card__icon">💚</div>
+              <div className="dash-stat-card__content">
+                <div className="dash-stat-card__label">Health</div>
+                <div className="dash-stat-card__value dash-stat-card__value--sm">
+                  {scoreData.financial_health}
+                </div>
+              </div>
+            </div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-card__icon">📊</div>
+              <div className="dash-stat-card__content">
+                <div className="dash-stat-card__label">DTI Ratio</div>
+                <div className="dash-stat-card__value">
+                  {scoreData.metrics?.dti ? `${(scoreData.metrics.dti * 100).toFixed(1)}%` : '—'}
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Navigation Tabs */}
+        <div className="dash-view-tabs">
+          <button
+            className={`dash-view-tab ${activeView === 'form' ? 'dash-view-tab--active' : ''}`}
+            onClick={() => setActiveView('form')}
+          >
+            <span className="dash-view-tab__icon">📝</span>
+            Financial Profile
+          </button>
+          <button
+            className={`dash-view-tab ${activeView === 'results' ? 'dash-view-tab--active' : ''}`}
+            onClick={() => setActiveView('results')}
+            disabled={!scoreData}
+          >
+            <span className="dash-view-tab__icon">🏆</span>
+            Credit Score Results
+            {scoreData && <span className="dash-view-tab__badge">✓</span>}
+          </button>
         </div>
 
-        {/* Financial Form */}
-        <div style={styles.formCard}>
-          <h2 style={styles.formTitle}>Financial Profile</h2>
-          <p style={styles.formSub}>Fill in your details to get a personalized credit assessment</p>
-          <Form />
+        {/* Content Area */}
+        <div className="dash-content">
+          {activeView === 'form' && (
+            <div className="dash-card fade-in">
+              <div className="dash-card__header">
+                <div>
+                  <h2 className="dash-card__title">Financial Profile</h2>
+                  <p className="dash-card__desc">
+                    Fill in your details across all tabs, then click <strong>Calculate Credit Score</strong> to get your assessment
+                  </p>
+                </div>
+                <div className="dash-card__badge">
+                  <span className="dash-card__badge-dot"></span>
+                  AI-Powered Analysis
+                </div>
+              </div>
+              <Form onScoreUpdate={handleScoreUpdate} />
+            </div>
+          )}
+
+          {activeView === 'results' && scoreData && (
+            <div className="dash-card fade-in">
+              <div className="dash-card__header">
+                <div>
+                  <h2 className="dash-card__title">Credit Score Analysis</h2>
+                  <p className="dash-card__desc">
+                    AI-generated assessment based on your financial profile
+                  </p>
+                </div>
+                <button
+                  className="dash-recalc-btn"
+                  onClick={() => setActiveView('form')}
+                >
+                  <span>📝</span> Update Profile
+                </button>
+              </div>
+              <CreditScoreResults data={scoreData} />
+            </div>
+          )}
+
+          {activeView === 'results' && !scoreData && (
+            <div className="dash-card dash-empty fade-in">
+              <div className="dash-empty__icon">📊</div>
+              <h3 className="dash-empty__title">No Credit Score Yet</h3>
+              <p className="dash-empty__desc">
+                Fill in your financial profile and click "Calculate Credit Score" to get your AI-powered assessment.
+              </p>
+              <button
+                className="dash-empty__btn"
+                onClick={() => setActiveView('form')}
+              >
+                Go to Financial Profile
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
