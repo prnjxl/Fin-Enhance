@@ -1,6 +1,7 @@
-
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { GOOGLE_AUTH_URL, GITHUB_AUTH_URL } from "../services/api";
 
 const BRAND_GREEN = "#22c55e";
 const BRAND_GREEN_DARK = "#16a34a";
@@ -83,6 +84,19 @@ const styles = {
     transition: "background 0.15s",
     marginBottom: "20px",
   },
+  primaryBtnDisabled: {
+    width: "100%",
+    padding: "13px",
+    background: "#a0d8b0",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    fontFamily: "'Helvetica Neue', sans-serif",
+    fontSize: "15px",
+    fontWeight: "600",
+    cursor: "not-allowed",
+    marginBottom: "20px",
+  },
   divider: {
     display: "flex",
     alignItems: "center",
@@ -102,7 +116,7 @@ const styles = {
   },
   oauthGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
+    gridTemplateColumns: "1fr 1fr",
     gap: "10px",
     marginBottom: "28px",
   },
@@ -121,6 +135,7 @@ const styles = {
     fontWeight: "500",
     color: "#333",
     transition: "background 0.12s, border-color 0.12s",
+    textDecoration: "none",
   },
   switchText: {
     textAlign: "center",
@@ -134,6 +149,17 @@ const styles = {
     fontSize: "12px",
     color: "#e53e3e",
     marginTop: "4px",
+  },
+  errorBanner: {
+    background: "#FEE2E2",
+    border: "1px solid #EF4444",
+    borderRadius: "8px",
+    padding: "12px 16px",
+    marginBottom: "20px",
+    fontFamily: "'Helvetica Neue', sans-serif",
+    fontSize: "13px",
+    color: "#DC2626",
+    fontWeight: "500",
   },
   successBanner: {
     background: BRAND_GREEN_LIGHT,
@@ -171,14 +197,6 @@ function GoogleIcon() {
   );
 }
 
-function FacebookIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-    </svg>
-  );
-}
-
 function GithubIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="#24292e">
@@ -186,12 +204,6 @@ function GithubIcon() {
     </svg>
   );
 }
-
-const oauthProviders = [
-  { icon: <GoogleIcon />, label: "Google" },
-  { icon: <FacebookIcon />, label: "Facebook" },
-  { icon: <GithubIcon />, label: "GitHub" },
-];
 
 function getPasswordStrength(pw) {
   if (!pw) return { score: 0, label: "", color: "#e0e0e0" };
@@ -213,7 +225,17 @@ function getPasswordStrength(pw) {
 export default function Signup() {
   const [form, setForm] = useState({ name: "", dob: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const { register, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const set = (key, val) => {
     setForm(f => ({ ...f, [key]: val }));
@@ -240,10 +262,25 @@ export default function Signup() {
     return e;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate();
     setErrors(e);
-    if (!Object.keys(e).length) setSubmitted(true);
+    if (Object.keys(e).length) return;
+
+    setApiLoading(true);
+    setApiError("");
+    try {
+      await register(form.name, form.dob, form.email, form.password);
+      navigate("/dashboard");
+    } catch (err) {
+      setApiError(err.message);
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSubmit();
   };
 
   const strength = getPasswordStrength(form.password);
@@ -257,10 +294,8 @@ export default function Signup() {
         <h1 style={styles.cardTitle}>Create your account</h1>
         <p style={styles.cardSubtitle}>Join thousands pioneering the future of credit</p>
 
-        {submitted && (
-          <div style={styles.successBanner}>
-            ✓ Account created! Welcome aboard.
-          </div>
+        {apiError && (
+          <div style={styles.errorBanner}>✕ {apiError}</div>
         )}
 
         <div style={styles.row2}>
@@ -272,6 +307,7 @@ export default function Signup() {
               placeholder="Jane Smith"
               value={form.name}
               onChange={e => set("name", e.target.value)}
+              onKeyDown={handleKeyDown}
             />
             {errors.name && <div style={styles.errorMsg}>{errors.name}</div>}
           </div>
@@ -296,6 +332,7 @@ export default function Signup() {
             placeholder="you@example.com"
             value={form.email}
             onChange={e => set("email", e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           {errors.email && <div style={styles.errorMsg}>{errors.email}</div>}
         </div>
@@ -308,6 +345,7 @@ export default function Signup() {
             placeholder="••••••••"
             value={form.password}
             onChange={e => set("password", e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           {form.password ? (
             <div>
@@ -335,6 +373,7 @@ export default function Signup() {
             placeholder="••••••••"
             value={form.confirm}
             onChange={e => set("confirm", e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           {form.confirm && form.confirm === form.password && !errors.confirm && (
             <div style={{ ...styles.hint, color: BRAND_GREEN }}>✓ Passwords match</div>
@@ -343,12 +382,13 @@ export default function Signup() {
         </div>
 
         <button
-          style={styles.primaryBtn}
+          style={apiLoading ? styles.primaryBtnDisabled : styles.primaryBtn}
           onClick={handleSubmit}
-          onMouseEnter={e => (e.target.style.background = BRAND_GREEN_DARK)}
-          onMouseLeave={e => (e.target.style.background = BRAND_GREEN)}
+          disabled={apiLoading}
+          onMouseEnter={e => { if (!apiLoading) e.target.style.background = BRAND_GREEN_DARK; }}
+          onMouseLeave={e => { if (!apiLoading) e.target.style.background = BRAND_GREEN; }}
         >
-          Create account
+          {apiLoading ? "Creating account..." : "Create account"}
         </button>
 
         <div style={styles.divider}>
@@ -358,17 +398,24 @@ export default function Signup() {
         </div>
 
         <div style={styles.oauthGrid}>
-          {oauthProviders.map(({ icon, label }) => (
-            <button
-              key={label}
-              style={styles.oauthBtn}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f7f7f7"; e.currentTarget.style.borderColor = "#ccc"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e0e0e0"; }}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
+          <a
+            href={GOOGLE_AUTH_URL}
+            style={styles.oauthBtn}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f7f7f7"; e.currentTarget.style.borderColor = "#ccc"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e0e0e0"; }}
+          >
+            <GoogleIcon />
+            Google
+          </a>
+          <a
+            href={GITHUB_AUTH_URL}
+            style={styles.oauthBtn}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f7f7f7"; e.currentTarget.style.borderColor = "#ccc"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e0e0e0"; }}
+          >
+            <GithubIcon />
+            GitHub
+          </a>
         </div>
 
         <p style={styles.switchText}>

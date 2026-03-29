@@ -1,29 +1,46 @@
-import { useState } from 'react'
 import './App.css'
+import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import Navigation from './layouts/Navigation.jsx'
 import Footer from './layouts/Footer.jsx'
-import Form from './hooks/Form.jsx'
 import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import Card from './components/Card.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
+    <AuthProvider>
       <Navigation />
-      <Landing />
-      <span>
-        <Card />
-        <Card />
-        <Card />
-      </span>
-      <br />
-      <Form />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <Landing />
+              <span>
+                <Card />
+                <Card />
+                <Card />
+              </span>
+            </>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
       <Footer />
-    </>
+    </AuthProvider>
   )
 }
 
