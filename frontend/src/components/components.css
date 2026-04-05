@@ -76,12 +76,12 @@
 /* Typography Inside Bento */
 .bento-title {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #111;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin: 0 0 8px 0;
+  margin: 8px 0 8px 0;
 }
 
 .text-center { text-align: center; }

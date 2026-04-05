@@ -25,7 +25,7 @@ const styles = {
     maxWidth: "480px",
   },
   cardTitle: {
-    fontFamily: "'Georgia', serif",
+    fontFamily: "'Inter', sans-serif",
     fontSize: "26px",
     fontWeight: "700",
     color: "#111",

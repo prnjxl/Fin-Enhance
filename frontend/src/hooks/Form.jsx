@@ -31,7 +31,6 @@ const Form = ({ onScoreUpdate }) => {
   const [predicting, setPredicting] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [saveError, setSaveError] = useState('');
-  const [activeSection, setActiveSection] = useState('profile');
 
   const handleSpendingChange = (name, value) => {
     setSpendings((prev) => ({ ...prev, [name]: value }));
@@ -140,36 +139,11 @@ const Form = ({ onScoreUpdate }) => {
     { key: 'miscellaneous', label: 'Miscellaneous'},
   ];
 
-  const sections = [
-    { id: 'profile', icon: '/user.png' },
-    { id: 'income', icon: '/money.png' },
-    { id: 'expenses', icon: '/bank.png' },
-    { id: 'goals', icon: '/goal.png' },
-  ];
-
   return (
     <div className="form-wrapper">
-      {/* Section Tabs */}
-      <div className="form-tabs">
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            className={`form-tab ${activeSection === s.id ? 'form-tab--active' : ''}`}
-            onClick={() => setActiveSection(s.id)}
-          >
-            <span className="form-tab__icon">
-              <img src={s.icon} width="30" height="30
-              " />
-            </span>
-          </button>
-        ))}
-      </div>
-
       <form onSubmit={handleSave}>
         {/* Profile Section */}
-        {activeSection === 'profile' && (
-          <div className="form-section fade-in">
+        <div className="form-section fade-in">
             <div className="form-section__header">
               <h3 className="form-section__title">Personal Information</h3>
               <p className="form-section__desc">Basic details about you</p>
@@ -209,11 +183,9 @@ const Form = ({ onScoreUpdate }) => {
               </div>
             </div>
           </div>
-        )}
 
         {/* Income & Loans Section */}
-        {activeSection === 'income' && (
-          <div className="form-section fade-in">
+        <div className="form-section fade-in">
             <div className="form-section__header">
               <h3 className="form-section__title">Income & Financial Obligations</h3>
               <p className="form-section__desc">Monthly income and recurring commitments</p>
@@ -272,11 +244,9 @@ const Form = ({ onScoreUpdate }) => {
               </div>
             </div>
           </div>
-        )}
 
         {/* Expenses Section */}
-        {activeSection === 'expenses' && (
-          <div className="form-section fade-in">
+        <div className="form-section fade-in">
             <div className="form-section__header">
               <h3 className="form-section__title">Monthly Expenses</h3>
               <p className="form-section__desc">Your regular monthly spending categories</p>
@@ -335,11 +305,9 @@ const Form = ({ onScoreUpdate }) => {
               </div>
             </div>
           </div>
-        )}
 
         {/* Goals Section */}
-        {activeSection === 'goals' && (
-          <div className="form-section fade-in">
+        <div className="form-section fade-in">
             <div className="form-section__header">
               <h3 className="form-section__title">Savings Goal</h3>
               <p className="form-section__desc">How much do you want to save monthly?</p>
@@ -352,7 +320,7 @@ const Form = ({ onScoreUpdate }) => {
                 <div className="form-input-wrap">
                   <span className="form-input-icon">₹</span>
                   <input
-                    className="form-input form-input--icon form-input--large"
+                    className="form-input form-input--icon"
                     type="number"
                     placeholder="7000"
                     value={desiredSavings}
@@ -364,7 +332,6 @@ const Form = ({ onScoreUpdate }) => {
               </div>
             </div>
           </div>
-        )}
 
         {/* Messages */}
         {saveMsg && (

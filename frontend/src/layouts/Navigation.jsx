@@ -42,7 +42,7 @@ export default function Navigation() {
 
       <ul className="nav-right">
         {isAuthenticated ? (
-          <li style={{ display: 'flex', alignItems: 'center' }}>
+          <li className="avatar-li" style={{ display: 'flex', alignItems: 'center' }}>
             <Link to="/dashboard" style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}>
               {user?.avatar ? (
                 <img 
@@ -62,7 +62,7 @@ export default function Navigation() {
           <>
             <li>
               <Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
-                Log in
+                Login
               </Link>
             </li>
             <li>

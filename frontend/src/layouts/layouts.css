@@ -68,6 +68,10 @@
     width: 100%;
 }
 
+.nav-right li.avatar-li::after {
+    display: none;
+}
+
 /* Footer */
 .site-footer {
   background: #ffffff;

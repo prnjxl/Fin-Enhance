@@ -75,8 +75,8 @@ const CreditResults = ({ data }) => {
   return (
     <div className="bento-grid fade-in-up">
       
-      {/* 1. Score Gauge Card (Span 2x2) */}
-      <div className="bento-item col-span-1 row-span-3 bento-score-card" style={{ background: `linear-gradient(135deg, ${scoreColor}1a 0%, #ffffff 100%)` }}>
+      {/* Score Gauge Card */}
+      <div className="bento-item col-span-1 row-span-2 bento-score-card" >
         <h3 className="bento-title">Credit Health Score</h3>
         <div className="bento-gauge-wrapper">
           <ResponsiveContainer width="100%" height="100%">
@@ -100,12 +100,12 @@ const CreditResults = ({ data }) => {
           <div className="bento-gauge-text">
             <div className="bento-score-val" style={{ color: scoreColor }}>{score.toFixed(1)}</div>
           </div>
-          <p className="bento-score-label">out of 100</p>
         </div>
-        
       </div>
 
-      {/* 2. Radar Profile Chart (Span 2x2) */}
+      
+
+      {/* Radar Profile Chart */}
       <div className="bento-item col-span-1 row-span-3">
         <h3 className="bento-title">Balance Profile</h3>
         <p className="bento-subtitle">Areas of Expenditure</p>
@@ -121,7 +121,7 @@ const CreditResults = ({ data }) => {
         </div>
       </div>
 
-      {/* 3. Metrics Breakdown Bar Chart (Span 2x1) */}
+      {/* Metrics Breakdown Bar Chart */}
       <div className="bento-item col-span-2 row-span-2">
         <h3 className="bento-title">Breakdown</h3>
         <p className="bento-subtitle"></p>
@@ -141,25 +141,33 @@ const CreditResults = ({ data }) => {
           </ResponsiveContainer>
         </div>
       </div>
+      
+      <div className="bento-item flex-center row-span-1">
+        <h3 className="bento-title text-center">Loan Approvability</h3>
+        <div className='bento-subtitle'>
+          {data.financial_health}
+        </div>
+      </div>
 
-      {/* 4. Risk Level & Insights (Span 1x1) */}
-      <div className="bento-item flex-center">
+      {/* Risk Level & Insights (Span 1x1) */}
+      <div className="bento-item flex-center row-span-1">
         <h3 className="bento-title text-center">Risk Assessment</h3>
-        <div>
+        <div className='bento-subtitle'>
           {riskLevel || "Low"}
         </div>
       </div>
 
-      <div className="bento-item flex-center">
-        <h3 className="bento-title text-center">Risk Assessment</h3>
-        <div>
-          {riskLevel || "Low"}
+      <div className="bento-item flex-center row-span-1">
+        <h3 className="bento-title text-center">Loan Approvability</h3>
+        <div className='bento-subtitle'>
+          {data.financial_health}
         </div>
       </div>
 
-      {/* 5. Score Trajectory (Span 1x1) */}
+      {/* Score Trajectory */}
       <div className="bento-item col-span-2 row-span-2">
         <h3 className="bento-title">Trajectory</h3>
+        <p className='bento-subtitle'>Month-wise Analysis</p>
         <div className="bento-chart-container" style={{ height: '120px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={mockTrendData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
@@ -178,7 +186,7 @@ const CreditResults = ({ data }) => {
         </div>
       </div>
 
-      {/* 6. AI Recommendations (Span 4) */}
+      {/* Recommendations (Span 4) */}
       {recommendations.length > 0 && (
         <div className="bento-item col-span-2 row-span-1 bento-recommendations">
           <h3 className="bento-title">Insights & Discovery</h3>
