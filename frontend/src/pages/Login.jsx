@@ -10,7 +10,7 @@ const BRAND_GREEN_LIGHT = "#dcfce7";
 const styles = {
   page: {
     minHeight: "calc(100vh - 64px)",
-    background: "#f0f0eb",
+    background: "#ffffff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

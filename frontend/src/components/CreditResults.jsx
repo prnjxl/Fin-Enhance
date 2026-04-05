@@ -1,4 +1,10 @@
 import React from 'react';
+import { 
+  ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis, 
+  RadarChart, PolarGrid, PolarAngleAxis as RadarAngleAxis, Radar, 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, Cell
+} from 'recharts';
 import './components.css';
 
 const CreditResults = ({ data }) => {
@@ -10,149 +16,184 @@ const CreditResults = ({ data }) => {
   const metrics = data.metrics || {};
   const recommendations = data.recommendations || [];
 
-  // Score color and gradient
   const getScoreColor = () => {
-    if (score >= 70) return { main: '#22c55e', bg: 'linear-gradient(135deg, #22c55e, #16a34a)', label: 'Excellent' };
-    if (score >= 40) return { main: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b, #d97706)', label: 'Average' };
-    return { main: '#ef4444', bg: 'linear-gradient(135deg, #ef4444, #dc2626)', label: 'Poor' };
+    if (score >= 70) return '#22c55e'; // Green
+    if (score >= 40) return '#f59e0b'; // Orange
+    return '#ef4444'; // Red
   };
 
-  const scoreStyle = getScoreColor();
-  const scorePercent = Math.min(score, 100);
-
-  // Risk badge style
   const getRiskBadgeClass = () => {
     if (riskLevel.includes('Low')) return 'risk-badge--low';
     if (riskLevel.includes('Moderate')) return 'risk-badge--moderate';
     return 'risk-badge--high';
   };
 
-  // Format ratio as percentage
-  const formatRatio = (val) => {
-    if (val === undefined || val === null) return '—';
-    return `${(val * 100).toFixed(1)}%`;
-  };
+  const scoreColor = getScoreColor();
 
-  const metricCards = [
-    {
-      label: 'Debt-to-Income',
-      value: formatRatio(metrics.dti),
-      icon: '📊',
-      desc: 'Loan repayments vs income',
-      color: metrics.dti > 0.4 ? '#ef4444' : metrics.dti > 0.2 ? '#f59e0b' : '#22c55e',
-    },
-    {
-      label: 'Expense Ratio',
-      value: formatRatio(metrics.expense_ratio),
-      icon: '💸',
-      desc: 'Total expenses vs income',
-      color: metrics.expense_ratio > 0.7 ? '#ef4444' : metrics.expense_ratio > 0.5 ? '#f59e0b' : '#22c55e',
-    },
-    {
-      label: 'Savings Ratio',
-      value: formatRatio(metrics.savings_ratio),
-      icon: '🏦',
-      desc: 'Desired savings vs income',
-      color: metrics.savings_ratio < 0.1 ? '#ef4444' : metrics.savings_ratio < 0.2 ? '#f59e0b' : '#22c55e',
-    },
-    {
-      label: 'Disposable Ratio',
-      value: formatRatio(metrics.disposable_ratio),
-      icon: '💎',
-      desc: 'Free income after expenses',
-      color: metrics.disposable_ratio < 0.2 ? '#ef4444' : metrics.disposable_ratio < 0.4 ? '#f59e0b' : '#22c55e',
-    },
+  // 1. Gauge Data for Credit Score
+  const gaugeData = [{ name: 'Score', value: score, fill: scoreColor }];
+
+  // 2. Radar Data: Measuring "Health" of each ratio (Higher is better here)
+  const radarData = [
+    { subject: 'Income', val: (1 - Math.min(metrics.dti || 0, 1)) * 100, fullMark: 100 },
+    { subject: 'Expen', val: (1 - Math.min(metrics.expense_ratio || 0, 1)) * 100, fullMark: 100 },
+    { subject: 'Savings', val: Math.min(metrics.savings_ratio || 0, 1) * 100, fullMark: 100 },
+    { subject: 'Disp', val: Math.min(metrics.disposable_ratio || 0, 1) * 100, fullMark: 100 },
   ];
 
+  // 3. Bar Data: Raw percentages of metrics
+  const barData = [
+    { name: 'DTI', value: (metrics.dti || 0) * 100, fill: (metrics.dti || 0) > 0.4 ? '#ef4444' : '#22c55e' },
+    { name: 'Expenses', value: (metrics.expense_ratio || 0) * 100, fill: (metrics.expense_ratio || 0) > 0.7 ? '#ef4444' : '#f59e0b' },
+    { name: 'Savings', value: (metrics.savings_ratio || 0) * 100, fill: (metrics.savings_ratio || 0) < 0.1 ? '#ef4444' : '#3b82f6' },
+    { name: 'Free Cash', value: (metrics.disposable_ratio || 0) * 100, fill: (metrics.disposable_ratio || 0) < 0.2 ? '#ef4444' : '#8b5cf6' },
+  ];
+
+  // 4. Mock Trend Data: Historical Journey
+  const mockTrendData = [
+    { month: 'Nov', score: Math.max(score - 45, 0) },
+    { month: 'Dec', score: Math.max(score - 30, 0) },
+    { month: 'Jan', score: Math.max(score - 15, 0) },
+    { month: 'Feb', score: Math.max(score - 5, 0) },
+    { month: 'Mar', score: score },
+  ];
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bento-tooltip">
+          <p className="bento-tooltip-label">{label}</p>
+          <p className="bento-tooltip-val" style={{color: payload[0].color || payload[0].fill}}>
+            {payload[0].name}: {Number(payload[0].value).toFixed(1)}{payload[0].name !== 'Score' ? '%' : ''}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="csr fade-in-up">
-      {/* Hero Score Card */}
-      <div className="csr-hero">
-        <div className="csr-hero__score-ring">
-          <svg viewBox="0 0 120 120" className="csr-hero__svg">
-            <circle
-              cx="60" cy="60" r="52"
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth="8"
-            />
-            <circle
-              cx="60" cy="60" r="52"
-              fill="none"
-              stroke={scoreStyle.main}
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray={`${scorePercent * 3.267} 326.7`}
-              transform="rotate(-90 60 60)"
-              className="csr-hero__progress"
-            />
-          </svg>
-          <div className="csr-hero__score-text">
-            <span className="csr-hero__number" style={{ color: scoreStyle.main }}>
-              {score.toFixed(1)}
-            </span>
-            <span className="csr-hero__out-of">/ 100</span>
+    <div className="bento-grid fade-in-up">
+      
+      {/* 1. Score Gauge Card (Span 2x2) */}
+      <div className="bento-item col-span-1 row-span-3 bento-score-card" style={{ background: `linear-gradient(135deg, ${scoreColor}1a 0%, #ffffff 100%)` }}>
+        <h3 className="bento-title">Credit Health Score</h3>
+        <div className="bento-gauge-wrapper">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart 
+              cx="50%" cy="60%" 
+              innerRadius="80%" outerRadius="100%" 
+              barSize={20} 
+              data={gaugeData} 
+              startAngle={200} endAngle={-20}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+              <RadialBar 
+                minAngle={15} 
+                background={{ fill: '#f3f4f6' }} 
+                clockWise={true} 
+                dataKey="value" 
+                cornerRadius={5} 
+              />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <div className="bento-gauge-text">
+            <div className="bento-score-val" style={{ color: scoreColor }}>{score.toFixed(1)}</div>
           </div>
+          <p className="bento-score-label">out of 100</p>
         </div>
+        
+      </div>
 
-        <div className="csr-hero__info">
-          <div className="csr-hero__title">Credit Score</div>
-          <div className={`csr-hero__risk-badge ${getRiskBadgeClass()}`}>
-            {riskLevel}
-          </div>
-          <div className="csr-hero__health">{financialHealth}</div>
-          {data.calculatedAt && (
-            <div className="csr-hero__date">
-              Last calculated: {new Date(data.calculatedAt).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-              })}
-            </div>
-          )}
+      {/* 2. Radar Profile Chart (Span 2x2) */}
+      <div className="bento-item col-span-1 row-span-3">
+        <h3 className="bento-title">Balance Profile</h3>
+        <p className="bento-subtitle">Areas of Expenditure</p>
+        <div className="bento-chart-container">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+              <PolarGrid stroke="#e5e7eb" />
+              <RadarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
+              <Radar name="Health" dataKey="val" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
+              <Tooltip content={<CustomTooltip />} />
+            </RadarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="csr-metrics">
-        <h3 className="csr-section-title">Financial Metrics</h3>
-        <div className="csr-metrics__grid">
-          {metricCards.map((m, i) => (
-            <div key={i} className="csr-metric-card">
-              <div className="csr-metric-card__header">
-                <span className="csr-metric-card__icon">{m.icon}</span>
-                <span className="csr-metric-card__label">{m.label}</span>
-              </div>
-              <div className="csr-metric-card__value" style={{ color: m.color }}>
-                {m.value}
-              </div>
-              <div className="csr-metric-card__bar">
-                <div
-                  className="csr-metric-card__bar-fill"
-                  style={{
-                    width: m.value !== '—' ? m.value : '0%',
-                    background: m.color,
-                  }}
-                ></div>
-              </div>
-              <div className="csr-metric-card__desc">{m.desc}</div>
-            </div>
-          ))}
+      {/* 3. Metrics Breakdown Bar Chart (Span 2x1) */}
+      <div className="bento-item col-span-2 row-span-2">
+        <h3 className="bento-title">Breakdown</h3>
+        <p className="bento-subtitle"></p>
+        <div className="bento-chart-container" style={{ height: '140px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
+              <YAxis tickLine={false} axisLine={false} tick={{fill: '#9ca3af', fontSize: 11}} />
+              <Tooltip content={<CustomTooltip />} cursor={{fill: '#f9fafb'}} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                {barData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Recommendations */}
+      {/* 4. Risk Level & Insights (Span 1x1) */}
+      <div className="bento-item flex-center">
+        <h3 className="bento-title text-center">Risk Assessment</h3>
+        <div>
+          {riskLevel || "Low"}
+        </div>
+      </div>
+
+      <div className="bento-item flex-center">
+        <h3 className="bento-title text-center">Risk Assessment</h3>
+        <div>
+          {riskLevel || "Low"}
+        </div>
+      </div>
+
+      {/* 5. Score Trajectory (Span 1x1) */}
+      <div className="bento-item col-span-2 row-span-2">
+        <h3 className="bento-title">Trajectory</h3>
+        <div className="bento-chart-container" style={{ height: '120px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={mockTrendData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={scoreColor} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={scoreColor} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="month" hide />
+              <YAxis domain={['dataMin - 10', 'dataMax + 10']} hide />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="score" stroke={scoreColor} strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* 6. AI Recommendations (Span 4) */}
       {recommendations.length > 0 && (
-        <div className="csr-recommendations">
-          <h3 className="csr-section-title">💡 Recommendations</h3>
-          <div className="csr-recommendations__list">
+        <div className="bento-item col-span-2 row-span-1 bento-recommendations">
+          <h3 className="bento-title">Insights & Discovery</h3>
+          <p className="bento-subtitle">Based on Metric Ratios and Current Market Trend</p>
+          <div className="bento-rec-grid">
             {recommendations.map((rec, i) => (
-              <div key={i} className="csr-recommendation">
-                <span className="csr-recommendation__bullet" style={{ background: scoreStyle.main }}></span>
-                <span className="csr-recommendation__text">{rec}</span>
+              <div key={i} className="bento-rec-card">
+                <div className="bento-rec-icon">💡</div>
+                <div className="bento-rec-text">{rec}</div>
               </div>
             ))}
           </div>
         </div>
       )}
+
     </div>
   );
 };

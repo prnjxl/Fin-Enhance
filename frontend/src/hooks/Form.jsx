@@ -64,10 +64,9 @@ const Form = ({ onScoreUpdate }) => {
               miscellaneous: d.spendings.miscellaneous?.toString() || '',
             });
           }
-          // If there's a saved credit score, push it to parent
-          if (d.creditScoreResult?.credit_score && onScoreUpdate) {
-            onScoreUpdate(d.creditScoreResult);
-          }
+          // Intentionally do NOT push the score to parent here. 
+          // Doing so triggers a view change to 'results', creating a loop.
+          // Dashboard handles initial score fetch.
         }
       })
       .catch(() => {});
@@ -132,20 +131,20 @@ const Form = ({ onScoreUpdate }) => {
   };
 
   const spendingCategories = [
-    { key: 'groceries', label: 'Groceries', icon: '🛒' },
-    { key: 'transport', label: 'Transport', icon: '🚗' },
-    { key: 'entertainment', label: 'Entertainment', icon: '🎬' },
-    { key: 'eatOut', label: 'Eating Out', icon: '🍽️' },
-    { key: 'healthcare', label: 'Healthcare', icon: '🏥' },
-    { key: 'education', label: 'Education', icon: '📚' },
-    { key: 'miscellaneous', label: 'Miscellaneous', icon: '📦' },
+    { key: 'groceries', label: 'Groceries'},
+    { key: 'transport', label: 'Transport'},
+    { key: 'entertainment', label: 'Entertainment'},
+    { key: 'eatOut', label: 'Eating Out',},
+    { key: 'healthcare', label: 'Healthcare'},
+    { key: 'education', label: 'Education' },
+    { key: 'miscellaneous', label: 'Miscellaneous'},
   ];
 
   const sections = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'income', label: 'Income & Loans', icon: '💰' },
-    { id: 'expenses', label: 'Expenses', icon: '💳' },
-    { id: 'goals', label: 'Goals', icon: '🎯' },
+    { id: 'profile', icon: '/user.png' },
+    { id: 'income', icon: '/money.png' },
+    { id: 'expenses', icon: '/bank.png' },
+    { id: 'goals', icon: '/goal.png' },
   ];
 
   return (
@@ -159,8 +158,10 @@ const Form = ({ onScoreUpdate }) => {
             className={`form-tab ${activeSection === s.id ? 'form-tab--active' : ''}`}
             onClick={() => setActiveSection(s.id)}
           >
-            <span className="form-tab__icon">{s.icon}</span>
-            <span className="form-tab__label">{s.label}</span>
+            <span className="form-tab__icon">
+              <img src={s.icon} width="30" height="30
+              " />
+            </span>
           </button>
         ))}
       </div>
@@ -302,7 +303,6 @@ const Form = ({ onScoreUpdate }) => {
               ))}
               <div className="form-field">
                 <label className="form-label">
-                  <span className="form-label__icon">⚡</span>
                   Utilities
                 </label>
                 <div className="form-input-wrap">
@@ -319,7 +319,6 @@ const Form = ({ onScoreUpdate }) => {
               </div>
               <div className="form-field">
                 <label className="form-label">
-                  <span className="form-label__icon">🛡️</span>
                   Insurance
                 </label>
                 <div className="form-input-wrap">
@@ -348,7 +347,6 @@ const Form = ({ onScoreUpdate }) => {
             <div className="form-grid form-grid--1">
               <div className="form-field form-field--wide">
                 <label className="form-label">
-                  <span className="form-label__icon">🎯</span>
                   Desired Monthly Savings
                 </label>
                 <div className="form-input-wrap">
@@ -390,7 +388,7 @@ const Form = ({ onScoreUpdate }) => {
             {saving ? (
               <><span className="form-btn__spinner"></span> Saving...</>
             ) : (
-              <><span className="form-btn__icon">💾</span> Save Data</>
+              <>Save Data</>
             )}
           </button>
           <button
@@ -402,7 +400,7 @@ const Form = ({ onScoreUpdate }) => {
             {predicting ? (
               <><span className="form-btn__spinner"></span> Analyzing...</>
             ) : (
-              <><span className="form-btn__icon">⚡</span> Calculate Credit Score</>
+              <>Check Score</>
             )}
           </button>
         </div>

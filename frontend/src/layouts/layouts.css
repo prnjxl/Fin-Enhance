@@ -4,11 +4,16 @@
     align-items: center;
     justify-content: space-between;
     position: sticky;
-    top: 10px; /*Fixing the Navbar at the top*/
+    top: 0; 
     width: 100%;
-    padding: 8px 40px;
+    padding: 18px 40px 8px; 
     box-sizing: border-box;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1000;
 }
+
+.navbar.scrolled {
+    background-color: #ffffff;}
 
 .logo {
     display: flex;
@@ -42,6 +47,7 @@
 .nav-right li {
     position: relative;
     cursor: pointer;
+    font-size: 15px;
     line-height: 1;
 }
 

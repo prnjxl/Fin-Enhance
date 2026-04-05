@@ -99,9 +99,9 @@ const predictCreditScore = async (req, res) => {
       });
     }
 
-    // Call the external credit score API
+    // Call the API
     const apiResponse = await fetch(
-      'https://gurujod-credit-score-api.hf.space/predict',
+      'https://gurujod-csp.hf.space/predict',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

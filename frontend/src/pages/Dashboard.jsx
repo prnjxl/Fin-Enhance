@@ -12,21 +12,6 @@ export default function Dashboard() {
   const [scoreData, setScoreData] = useState(null);
   const [activeView, setActiveView] = useState('form');
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   // Load saved credit score on mount
   useEffect(() => {
     getCreditScore()
@@ -41,162 +26,84 @@ export default function Dashboard() {
     setActiveView('results');
   };
 
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <div className="dash-page">
-      <div className="dash-container">
-        {/* Header */}
-        <div className="dash-header">
-          <div className="dash-header__left">
-            <h1 className="dash-header__title">
-              Welcome back, {user?.name?.split(' ')[0] || "User"} 👋
-            </h1>
-            <p className="dash-header__subtitle">
-              Manage your financial profile and track your credit health
-            </p>
-          </div>
-          <div className="dash-header__right">
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" className="dash-avatar-img" />
-            ) : (
-              <div className="dash-avatar">{getInitials(user?.name)}</div>
-            )}
-            <div className="dash-user-info">
-              <div className="dash-user-name">{user?.name}</div>
-              <div className="dash-user-email">{user?.email || user?.provider}</div>
-            </div>
-            <button className="dash-logout-btn" onClick={handleLogout}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Log out
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Stats - show if we have a score */}
-        {scoreData && (
-          <div className="dash-quick-stats fade-in">
-            <div className="dash-stat-card dash-stat-card--score">
-              <div className="dash-stat-card__icon">📈</div>
-              <div className="dash-stat-card__content">
-                <div className="dash-stat-card__label">Credit Score</div>
-                <div className="dash-stat-card__value" style={{
-                  color: scoreData.credit_score >= 70 ? '#22c55e' :
-                    scoreData.credit_score >= 40 ? '#f59e0b' : '#ef4444'
-                }}>
-                  {scoreData.credit_score?.toFixed(1)}
-                </div>
-              </div>
-            </div>
-            <div className="dash-stat-card">
-              <div className="dash-stat-card__icon">🛡️</div>
-              <div className="dash-stat-card__content">
-                <div className="dash-stat-card__label">Risk Level</div>
-                <div className="dash-stat-card__value dash-stat-card__value--sm">
-                  {scoreData.risk_level}
-                </div>
-              </div>
-            </div>
-            <div className="dash-stat-card">
-              <div className="dash-stat-card__icon">💚</div>
-              <div className="dash-stat-card__content">
-                <div className="dash-stat-card__label">Health</div>
-                <div className="dash-stat-card__value dash-stat-card__value--sm">
-                  {scoreData.financial_health}
-                </div>
-              </div>
-            </div>
-            <div className="dash-stat-card">
-              <div className="dash-stat-card__icon">📊</div>
-              <div className="dash-stat-card__content">
-                <div className="dash-stat-card__label">DTI Ratio</div>
-                <div className="dash-stat-card__value">
-                  {scoreData.metrics?.dti ? `${(scoreData.metrics.dti * 100).toFixed(1)}%` : '—'}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs */}
-        <div className="dash-view-tabs">
-          <button
-            className={`dash-view-tab ${activeView === 'form' ? 'dash-view-tab--active' : ''}`}
+    <div className="dash-layout">
+      {/* Sidebar Navigation */}
+      <aside className="dash-sidebar">
+        
+        <nav className="dash-sidebar__nav">
+          {/* Dashboard Icon - mapped to Overview / Results */}
+          <button 
+            className={`sidebar-icon ${activeView === 'results' ? 'active' : ''}`} 
+            title="Dashboard Overview"
+            onClick={() => scoreData && setActiveView('results')}
+            style={{ opacity: scoreData ? 1 : 0.5, cursor: scoreData ? 'pointer' : 'not-allowed' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          
+          {/* Form / Edit Profile Icon - mapped to Form view */}
+          <button 
+            className={`sidebar-icon ${activeView === 'form' ? 'active' : ''}`} 
+            title="Financial Profile Form"
             onClick={() => setActiveView('form')}
           >
-            <span className="dash-view-tab__icon">📝</span>
-            Financial Profile
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button
-            className={`dash-view-tab ${activeView === 'results' ? 'dash-view-tab--active' : ''}`}
-            onClick={() => setActiveView('results')}
-            disabled={!scoreData}
-          >
-            <span className="dash-view-tab__icon">🏆</span>
-            Credit Score Results
-            {scoreData && <span className="dash-view-tab__badge">✓</span>}
+          
+          <button className="sidebar-icon" title="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
-        </div>
+          
+          <button className="sidebar-icon" title="Documents">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </button>
+        </nav>
+        {/* 
+        <button className="sidebar-icon" onClick={logout} title="Logout" style={{ color: '#000000ff' }}>
+           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+        </button> */}
+      </aside>
 
-        {/* Content Area */}
-        <div className="dash-content">
-          {activeView === 'form' && (
-            <div className="dash-card fade-in">
-              <div className="dash-card__header">
-                <div>
-                  <h2 className="dash-card__title">Financial Profile</h2>
-                  <p className="dash-card__desc">
-                    Fill in your details across all tabs, then click <strong>Calculate Credit Score</strong> to get your assessment
-                  </p>
-                </div>
-                <div className="dash-card__badge">
-                  <span className="dash-card__badge-dot"></span>
-                  AI-Powered Analysis
-                </div>
+      {/* Main Content Area */}
+      <main className="dash-main">
+
+        {/* Content Wrapper */}
+        <div className="dash-content-area fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="dash-breadcrumbs">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+             Dashboard
+          </div>
+          
+          <h1 className="dash-welcome">
+            Welcome back, {user?.name?.split(' ')[0] || "Greyola"}
+          </h1>
+
+          {/* Render Actual Component */}
+          <div className="dash-actual-content fade-in" style={{ animationDelay: '0.3s' }}>
+            {activeView === 'form' && (
+              <div className="dash-component-wrapper">
+                <Form onScoreUpdate={handleScoreUpdate} />
               </div>
-              <Form onScoreUpdate={handleScoreUpdate} />
-            </div>
-          )}
-
-          {activeView === 'results' && scoreData && (
-            <div className="dash-card fade-in">
-              <div className="dash-card__header">
-                <div>
-                  <h2 className="dash-card__title">Credit Score Analysis</h2>
-                  <p className="dash-card__desc">
-                    AI-generated assessment based on your financial profile
-                  </p>
-                </div>
-                <button
-                  className="dash-recalc-btn"
-                  onClick={() => setActiveView('form')}
-                >
-                  <span>📝</span> Update Profile
-                </button>
-              </div>
-              <CreditScoreResults data={scoreData} />
-            </div>
-          )}
-
-          {activeView === 'results' && !scoreData && (
-            <div className="dash-card dash-empty fade-in">
-              <div className="dash-empty__icon">📊</div>
-              <h3 className="dash-empty__title">No Credit Score Yet</h3>
-              <p className="dash-empty__desc">
-                Fill in your financial profile and click "Calculate Credit Score" to get your AI-powered assessment.
-              </p>
-              <button
-                className="dash-empty__btn"
-                onClick={() => setActiveView('form')}
-              >
-                Go to Financial Profile
-              </button>
-            </div>
-          )}
+            )}
+            
+            {activeView === 'results' && scoreData && (
+                <CreditResults data={scoreData} />
+            )}
+          </div>
+          
         </div>
-      </div>
+      </main>
     </div>
   );
 }

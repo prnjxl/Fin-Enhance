@@ -1,6 +1,8 @@
 import icon_arrow from '../assets/arrow-icon.png'
 import './components.css'
 
+// This is for Landing page
+
 export default function Card() {
     return (
         <>
