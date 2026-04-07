@@ -1,4 +1,5 @@
 const dotenv = require('dotenv');
+const path = require('path');
 dotenv.config({ path: '../.env' });
 
 const express = require('express');
@@ -57,7 +58,20 @@ app.get('/api/health', (req, res) => {
 //Error Handler
 app.use(errorHandler);
 
-//Start Server
+//Export App for Vercel
+module.exports = app;
+
+// Serve frontend static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+  // For any route not handled by the API, send the frontend index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
+
+//Start Server logic
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
