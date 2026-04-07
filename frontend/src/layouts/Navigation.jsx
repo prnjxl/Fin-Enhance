@@ -35,7 +35,7 @@ export default function Navigation() {
 
       <ul className="nav-center">
         <li><Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</Link></li>
-        <li><Link to="/features" style={{ textDecoration: 'none', color: 'inherit' }}>Features</Link></li>
+        <li><a href="/#features" style={{ textDecoration: 'none', color: 'inherit' }}>Features</a></li>
         <li><Link to="/about" style={{ textDecoration: 'none', color: 'inherit' }}>About Us</Link></li>
         <li><Link to="/insights" style={{ textDecoration: 'none', color: 'inherit' }}>Insights</Link></li>
       </ul>

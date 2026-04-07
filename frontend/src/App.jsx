@@ -7,7 +7,6 @@ import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import Dashboard from './pages/Dashboard.jsx'
-import Card from './components/Card.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {

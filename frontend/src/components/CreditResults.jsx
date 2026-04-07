@@ -51,11 +51,11 @@ const CreditResults = ({ data }) => {
 
   // 4. Mock Trend Data: Historical Journey
   const mockTrendData = [
-    { month: 'Nov', score: Math.max(score - 45, 0) },
-    { month: 'Dec', score: Math.max(score - 30, 0) },
-    { month: 'Jan', score: Math.max(score - 15, 0) },
-    { month: 'Feb', score: Math.max(score - 5, 0) },
-    { month: 'Mar', score: score },
+    { month: 'Dec', score: Math.max(score - 14.9, 0) },
+    { month: 'Jan', score: Math.max(score - 11.7, 0) },
+    { month: 'Feb', score: Math.max(score - 8.5, 0) },
+    { month: 'March', score: Math.max(score - 5, 0) },
+    { month: 'April', score: score },
   ];
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -77,7 +77,7 @@ const CreditResults = ({ data }) => {
       
       {/* Score Gauge Card */}
       <div className="bento-item col-span-1 row-span-2 bento-score-card" >
-        <h3 className="bento-title">Credit Health Score</h3>
+        <h3 className="bento-title">Financial Score</h3>
         <div className="bento-gauge-wrapper">
           <ResponsiveContainer width="100%" height="100%">
             <RadialBarChart 
@@ -114,7 +114,7 @@ const CreditResults = ({ data }) => {
             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
               <PolarGrid stroke="#e5e7eb" />
               <RadarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
-              <Radar name="Health" dataKey="val" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
+              <Radar name="Percent" dataKey="val" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
               <Tooltip content={<CustomTooltip />} />
             </RadarChart>
           </ResponsiveContainer>
@@ -143,9 +143,9 @@ const CreditResults = ({ data }) => {
       </div>
       
       <div className="bento-item flex-center row-span-1">
-        <h3 className="bento-title text-center">Loan Approvability</h3>
+        <h3 className="bento-title text-center">Overall Portfolio</h3>
         <div className='bento-subtitle'>
-          {data.financial_health}
+          {data.financial_health.split(" ")[0]}
         </div>
       </div>
 
@@ -160,7 +160,7 @@ const CreditResults = ({ data }) => {
       <div className="bento-item flex-center row-span-1">
         <h3 className="bento-title text-center">Loan Approvability</h3>
         <div className='bento-subtitle'>
-          {data.financial_health}
+          {data.financial_health.split(" ")[0]} Possibility
         </div>
       </div>
 

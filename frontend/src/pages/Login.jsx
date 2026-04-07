@@ -18,7 +18,7 @@ const styles = {
   },
   card: {
     background: "#ffffff",
-    borderRadius: "16px",
+    borderRadius: "8px",
     boxShadow: "0 2px 24px rgba(0,0,0,0.08)",
     padding: "44px 48px",
     width: "100%",
