@@ -1,6 +1,9 @@
 const dotenv = require('dotenv');
 const path = require('path');
-dotenv.config({ path: '../.env' });
+
+// Load .env — try multiple paths for local dev; on Render, env vars come from the dashboard
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config(); // also check cwd/.env as fallback
 
 const express = require('express');
 const cors = require('cors');
@@ -17,9 +20,23 @@ const app = express();
 //Middleware
 
 //CORS — allow frontend origin
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      // Strip trailing slash for comparison
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      if (allowedOrigins.some(o => o.replace(/\/$/, '') === normalizedOrigin)) {
+        return callback(null, true);
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
@@ -36,6 +53,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   })
@@ -58,21 +76,25 @@ app.get('/api/health', (req, res) => {
 //Error Handler
 app.use(errorHandler);
 
+// Serve frontend static files in production (only if co-located)
+if (process.env.NODE_ENV === 'production') {
+  const frontendDist = path.join(__dirname, '../frontend/dist');
+  const fs = require('fs');
+  if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(frontendDist, 'index.html'));
+    });
+  }
+}
+
 //Export App for Vercel
 module.exports = app;
 
-// Serve frontend static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-  // For any route not handled by the API, send the frontend index.html
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+//Start Server logic (only when run directly, not when imported)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
 }
-
-//Start Server logic
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
